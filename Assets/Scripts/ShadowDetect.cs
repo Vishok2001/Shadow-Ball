@@ -7,9 +7,8 @@ public class ShadowDetect : MonoBehaviour
     public float surfaceY = 1f;
     public LayerMask shadowCastingLayers;
 
-    public float graceTime = 0.5f;  // How long the ball can be in light before sinking
+    public float graceTime = 0.5f; // Grace period between shadows
     private float timeOutsideShadow = 0f;
-
 
     private Rigidbody rb;
     private bool isInShadow = true;
@@ -22,15 +21,47 @@ public class ShadowDetect : MonoBehaviour
         {
             mainLight = RenderSettings.sun;
         }
+
+        // Raycast down to place the ball exactly on the ground
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position + Vector3.up * 1f, Vector3.down, out hit, 5f))
+        {
+            Vector3 pos = transform.position;
+            pos.y = hit.point.y;
+            transform.position = pos;
+
+            // Optional: store surfaceY if ground is uneven
+            surfaceY = hit.point.y;
+        }
     }
 
     void FixedUpdate()
     {
+        if (mainLight == null)
+            return;
+
+        float sunAngle = mainLight.transform.rotation.eulerAngles.x;
+        bool isNight = sunAngle > 180f || sunAngle < 5f;
+
+        if (isNight)
+        {
+            // At night, freeze the ball and keep it at the same position
+            if (!rb.isKinematic)
+                rb.isKinematic = true;
+
+            Vector3 pos = transform.position;
+            pos.y = surfaceY;
+            transform.position = pos;
+
+            return;
+        }
+
+        // DAYTIME: Check if we're in shadow and allow movement
         bool currentlyInShadow = CheckIfInShadow();
 
         if (currentlyInShadow)
         {
-            timeOutsideShadow = 0f;  // Reset the timer
+            timeOutsideShadow = 0f;
             isInShadow = true;
 
             if (rb.isKinematic)
@@ -54,14 +85,10 @@ public class ShadowDetect : MonoBehaviour
         }
     }
 
-
     bool CheckIfInShadow()
     {
-        if (mainLight == null)
-            return true;
-
         Vector3 lightDir = -mainLight.transform.forward.normalized;
-        Vector3 rayOrigin = transform.position + Vector3.up * 1f; // Raise ray origin a bit
+        Vector3 rayOrigin = transform.position + Vector3.up * 1f;
         float rayLength = 100f;
 
         RaycastHit hit;
@@ -72,7 +99,7 @@ public class ShadowDetect : MonoBehaviour
             Debug.Log("In Shadow — hit: " + hit.collider.name + " on layer " +
                       LayerMask.LayerToName(hit.collider.gameObject.layer));
             Debug.DrawRay(rayOrigin, lightDir * hit.distance, Color.green);
-            Debug.DrawRay(hit.point, Vector3.up * 0.2f, Color.blue, 0.5f); // Show where it hit
+            Debug.DrawRay(hit.point, Vector3.up * 0.2f, Color.blue, 0.5f);
         }
         else
         {

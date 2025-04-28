@@ -354,6 +354,7 @@
 -analyzer:"C:/Program Files/Unity/Hub/Editor/2022.3.16f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 "Assets/Scripts/BallMovement.cs"
 "Assets/Scripts/Camera.cs"
+"Assets/Scripts/DayNightCycle.cs"
 "Assets/Scripts/PlayerShadowMovement.cs"
 "Assets/Scripts/ShadowDetect.cs"
 -langversion:9.0
